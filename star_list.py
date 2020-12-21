@@ -49,7 +49,8 @@ def cli(args = sys.argv[0]):
             lstart = args.lstart, n = args.n)
 
 def main(catalogue, pointings, lstart, n):
-    RADIUS = 0.4 
+
+    RADIUS = 0.004284 # Estimate: 1.02*0.21/25.0/2.0
     # Load file of VLITE pointings
     # For now, start with RA, Dec, duration and date.
     pd.options.display.max_colwidth = 2000 # Surprising this is necessary...
@@ -63,7 +64,6 @@ def main(catalogue, pointings, lstart, n):
     pointings = pointings.to_numpy()
     print("Pointings loaded")
 
-
     # Load catalogue
     catalogue = pd.read_csv(catalogue, delimiter = ',', 
             dtype={'source_id':str, 
@@ -72,21 +72,26 @@ def main(catalogue, pointings, lstart, n):
                 'dist_c':float})
     maindb = catalogue.to_numpy()
     maindb = maindb[1:, :] # remove column headers
+    # Correct columns:
+    maindb_ = np.zeros((maindb.shape[0], 3))
+    maindb_[:, 1:2] = maindb[:, 3:4]
+    maindb_[:, 2:3] = maindb[:, 5:6]
     # Sort by distance:
     dist_idx = np.argsort(maindb[:, -1])
-    db_full = maindb[dist_idx, :]
+    db_full = maindb_[dist_idx, :]
     print("Catalogue loaded")
-    
 
+    pointing_list = []
     # Step through each pointing
     for i in range(pointings.shape[0]):
         start = time.time()
         idx_i = gen_star_lists(pointings[i, 0:2], db_full, RADIUS)
-        print(time.time() - start)
-        print(idx_i)
-        
-
-
+        if(len(idx_i) > 0):
+            star_list = [pointings[i, 2], pointings[i, 3], idx_i]
+            pointing_list.append(star_list)
+        print('{} of {} in {} s'.format(i, pointings.shape[0], time.time() - start))
+    with open('stars_per_pointing_{}.pkl'.format(RADIUS), 'wb') as f:
+        pickle.dump(pointing_list, f)
 
 if(__name__=="__main__"):
     cli()
