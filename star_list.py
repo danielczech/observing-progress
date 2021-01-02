@@ -50,7 +50,7 @@ def cli(args = sys.argv[0]):
 
 def main(catalogue, pointings, lstart, n):
 
-    RADIUS = 0.004284 # Estimate: 1.02*0.21/25.0/2.0
+    RADIUS = 0.245455 # Estimate in deg: 1.02*0.21/25.0*180/np.pi/2.0
     # Load file of VLITE pointings
     # For now, start with RA, Dec, duration and date.
     pd.options.display.max_colwidth = 2000 # Surprising this is necessary...
