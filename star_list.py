@@ -35,20 +35,21 @@ def cli(args = sys.argv[0]):
     description = """Get index list of stars per FoV."""
     parser = argparse.ArgumentParser(prog = 'star-lists', 
         usage = usage, description = description) 
-    help_info = """Specify catalogue, starting position in file 
-                and number of lines."""
+    help_info = """Specify catalogue, starting position in file, 
+                number of lines, and minimum obs duration."""
     parser.add_argument('catalogue', type = str, help = help_info)
     parser.add_argument('pointings', type = str, help = help_info)
     parser.add_argument('lstart', type = int, help = help_info)
     parser.add_argument('n', type = int, help = help_info)
+    parser.add_argument('d_min', type = int, help = help_info)
     if(len(sys.argv[1:]) == 0): 
         print('Missing args')
         parser.exit()
     args = parser.parse_args()
     main(catalogue = args.catalogue, pointings = args.pointings, 
-            lstart = args.lstart, n = args.n)
+            lstart = args.lstart, n = args.n, d_min = args.d_min)
 
-def main(catalogue, pointings, lstart, n):
+def main(catalogue, pointings, lstart, n, d_min):
 
     RADIUS = 0.245455 # Estimate in deg: 1.02*0.21/25.0*180/np.pi/2.0
     # Load file of VLITE pointings
@@ -84,6 +85,10 @@ def main(catalogue, pointings, lstart, n):
     pointing_list = []
     # Step through each pointing from pointing lstart to pointing n:
     for i in range(lstart, lstart + n):
+        if(pointings[i, 2] < d_min):
+            # If pointing duration is shorter than specified time limit, 
+            # skip and continue
+            continue
         start = time.time()
         idx_i = gen_star_lists(pointings[i, 0:2], db_full, RADIUS)
         if(len(idx_i) > 0):
@@ -97,7 +102,7 @@ def main(catalogue, pointings, lstart, n):
             n, len(idx_i), time.time() - start))
     print(pointing_list)
     print("Saving source lists: ")
-    with open('stars_per_pointing_{}.pkl'.format(RADIUS), 'wb') as f:
+    with open('stars_per_pointing_{}.pkl'.format(lstart), 'wb') as f:
         pickle.dump(pointing_list, f)
 
 if(__name__=="__main__"):
