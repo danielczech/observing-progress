@@ -72,27 +72,33 @@ def main(catalogue, pointings, lstart, n):
                 'dist_c':float})
     maindb = catalogue.to_numpy()
     maindb = maindb[1:, :] # remove column headers
-    # Correct columns:
-    maindb_ = np.zeros((maindb.shape[0], 3))
-    maindb_[:, 1:2] = maindb[:, 3:4]
-    maindb_[:, 2:3] = maindb[:, 5:6]
+    # Use lines below if using full unrestricted DB:
+    # maindb_ = np.zeros((maindb.shape[0], 3))
+    # maindb_[:, 1:2] = maindb[:, 3:4]
+    # maindb_[:, 2:3] = maindb[:, 5:6]
     # Sort by distance:
     dist_idx = np.argsort(maindb[:, -1])
-    db_full = maindb_[dist_idx, :]
+    db_full = maindb[dist_idx, :]
     print("Catalogue loaded")
 
     pointing_list = []
-    # Step through each pointing
-    for i in range(pointings.shape[0]):
+    # Step through each pointing from pointing lstart to pointing n:
+    for i in range(lstart, lstart + n):
         start = time.time()
         idx_i = gen_star_lists(pointings[i, 0:2], db_full, RADIUS)
         if(len(idx_i) > 0):
-            star_list = [pointings[i, 2], pointings[i, 3], idx_i]
+            # field 1: pointing index
+            # field 2: duration
+            # field 3: date
+            # field 4: indices of stars observed in main catalogue
+            star_list = [i, pointings[i, 2], pointings[i, 3], idx_i]
             pointing_list.append(star_list)
-        print('{} of {} in {} s'.format(i, pointings.shape[0], time.time() - start))
+        print('{} of {} for {} stars in {:.3} s'.format(i - lstart + 1, 
+            n, len(idx_i), time.time() - start))
+    print(pointing_list)
+    print("Saving source lists: ")
     with open('stars_per_pointing_{}.pkl'.format(RADIUS), 'wb') as f:
         pickle.dump(pointing_list, f)
 
 if(__name__=="__main__"):
     cli()
-
