@@ -8,6 +8,7 @@ import sys
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 def cli(args = sys.argv[0]):
     usage = "{} [options]".format(args)
@@ -35,7 +36,8 @@ def main(p_dir, t_obs, n_beams, d_min):
     # Set main index based on 32M database:
     observed = np.zeros(34000000)
     # Progress list:
-    progress = []
+    dates = []
+    stars = []
     # Walk through files in directory
     p_files = os.listdir(p_dir)
     # For each file, step through pointings
@@ -59,8 +61,13 @@ def main(p_dir, t_obs, n_beams, d_min):
             if(VERBOSE):
                 print("    Duration: {} Slots: {}".format(pointing[1], n_slots))
                 print("    New stars: {}".format(len(new_idxs)))
+            # format date/time for accumulation later
+            ep_time = datetime.strptime(pointing[2], '%Y-%m-%d')
             # increment novel observed
-            progress.append([pointing[2], len(new_idxs)])
+            dates.append(ep_time) 
+            stars.append(len(new_idxs))
+    print("Saving...")
+    progress = [dates, stars]
     with open('progress.pkl', 'wb') as f:
         pickle.dump(progress, f)
 
