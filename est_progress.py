@@ -90,7 +90,7 @@ def main(p_dir, t_obs, n_beams, d_min):
     print("Saving...")
     a_dates, a_stars = accumulate_dates(dates, stars)
     progress = [a_dates, a_stars]
-    with open('progress.pkl', 'wb') as f:
+    with open('progress_{}.pkl'.format(n_beams), 'wb') as f:
         pickle.dump(progress, f)
 
 if(__name__=="__main__"):
