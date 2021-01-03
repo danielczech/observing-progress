@@ -31,6 +31,7 @@ def cli(args = sys.argv[0]):
             n_beams = args.n_beams, d_min = args.d_min)
 
 def main(p_dir, t_obs, n_beams, d_min):
+    VERBOSE = True
     # Set main index based on 32M database:
     observed = np.zeros(34000000)
     # Progress list:
@@ -39,7 +40,6 @@ def main(p_dir, t_obs, n_beams, d_min):
     p_files = os.listdir(p_dir)
     # For each file, step through pointings
     for p_file in p_files:
-        print("Opening {}".format(p_file))
         p_path = os.path.join(p_dir, p_file)
         with open(p_path, 'rb') as f:
             p_list = pickle.load(f)
@@ -51,12 +51,14 @@ def main(p_dir, t_obs, n_beams, d_min):
             # Note: Partial slots are discarded here (partial being < d_min)
             p_duration = pointing[1]//d_min*d_min
             n_slots = n_beams*p_duration//t_obs # t_obs in seconds
-            print("    Duration: {} Slots: {}".format(pointing[1], n_slots))
             # check which stars still to be observed
             unobserved = np.where(observed[pointing[3]] == 0)[0]
             # mark as observed
             new_idxs = unobserved[0:int(n_slots)]
             observed[pointing[3][new_idxs]] = observed[pointing[3][new_idxs]] + 1
+            if(VERBOSE):
+                print("    Duration: {} Slots: {}".format(pointing[1], n_slots))
+                print("    New stars: {}".format(len(new_idxs)))
             # increment novel observed
             progress.append([pointing[2], len(new_idxs)])
     with open('progress.pkl', 'wb') as f:
