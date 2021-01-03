@@ -14,12 +14,15 @@ def cli(args = sys.argv[0]):
     description = """Get observing progress (cumulative count)."""
     parser = argparse.ArgumentParser(prog = 'star-lists', 
         usage = usage, description = description) 
-    help_info = """Specify directory of pre-processed pointing files (each 
-    containing duration, date and list of stars), number of beams, and 
-    desired observation length"""
-    parser.add_argument('p_dir', type = str, help = help_info)
-    parser.add_argument('t_obs', type = int, help = help_info)
-    parser.add_argument('n_beams', type = int, help = help_info)
+    help_p_dir = """Specify directory of pre-processed pointing files (each 
+    containing duration, date and list of stars)"""
+    help_t_obs = """Desired observation duration for each star"""
+    help_n_beams = """Specified number of beams"""
+    help_d_min = """Minimum acceptable primary observation duration"""
+    parser.add_argument('p_dir', type = str, help = help_p_dir)
+    parser.add_argument('t_obs', type = int, help = help_t_obs)
+    parser.add_argument('n_beams', type = int, help = help_n_beams)
+    parser.add_argument('d_min', type = int, help = help_d_min)
     if(len(sys.argv[1:]) == 0): 
         print('Missing args')
         parser.exit()
