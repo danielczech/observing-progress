@@ -8,7 +8,7 @@ import sys
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def cli(args = sys.argv[0]):
     usage = "{} [options]".format(args)
@@ -30,6 +30,27 @@ def cli(args = sys.argv[0]):
     args = parser.parse_args()
     main(p_dir = args.p_dir, t_obs = args.t_obs, 
             n_beams = args.n_beams, d_min = args.d_min)
+
+def accumulate_dates(dates, stars):
+    """Accumulate observed stars on the same dates.
+    
+    Args:
+        dates: list of datetime objects
+        stars: list of associated numbers of observed stars
+
+    Returns:
+        a_dates: list of unique datetime objects
+        a_stars: list of associated accumulated numbers of stars
+    """
+    start = min(dates)
+    stop = max(dates)
+    t_range = (stop - start).days
+    a_dates = [start + timedelta(days = n) for n in range(t_range + 1)]
+    a_stars = [0 for n in range(t_range + 1)]
+    for date in dates:
+        idx = (date - start).days
+        a_stars[idx] = a_stars[idx] + stars[idx]
+    return a_dates, a_stars
 
 def main(p_dir, t_obs, n_beams, d_min):
     VERBOSE = True
@@ -67,7 +88,8 @@ def main(p_dir, t_obs, n_beams, d_min):
             dates.append(ep_time) 
             stars.append(len(new_idxs))
     print("Saving...")
-    progress = [dates, stars]
+    a_dates, a_stars = accumulate_dates(dates, stars)
+    progress = [a_dates, a_stars]
     with open('progress.pkl', 'wb') as f:
         pickle.dump(progress, f)
 
