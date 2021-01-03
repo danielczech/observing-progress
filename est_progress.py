@@ -28,9 +28,9 @@ def cli(args = sys.argv[0]):
         parser.exit()
     args = parser.parse_args()
     main(p_dir = args.p_dir, t_obs = args.t_obs, 
-            n_beams = args.n_beams)
+            n_beams = args.n_beams, d_min = args.d_min)
 
-def main(p_dir, t_obs, n_beams):
+def main(p_dir, t_obs, n_beams, d_min):
     # Set main index based on 32M database:
     observed = np.zeros(34000000)
     # Progress list:
@@ -39,15 +39,19 @@ def main(p_dir, t_obs, n_beams):
     p_files = os.listdir(p_dir)
     # For each file, step through pointings
     for p_file in p_files:
+        print("Opening {}".format(p_file))
         p_path = os.path.join(p_dir, p_file)
         with open(p_path, 'rb') as f:
             p_list = pickle.load(f)
         for pointing in p_list:
-            # Limit duration if desired (uncomment below):
-            # if(pointing[1] < 300):
-            #    continue
-            # calculate number of beam slots available
-            n_slots = n_beams*pointing[1]//t_obs # in seconds
+            # Limit duration if desired:
+            if(pointing[1] < d_min):
+                continue
+            # Calculate number of beam slots available
+            # Note: Partial slots are discarded here (partial being < d_min)
+            p_duration = pointing[1]//d_min*d_min
+            n_slots = n_beams*p_duration//t_obs # t_obs in seconds
+            print("    Duration: {} Slots: {}".format(pointing[1], n_slots))
             # check which stars still to be observed
             unobserved = np.where(observed[pointing[3]] == 0)[0]
             # mark as observed
