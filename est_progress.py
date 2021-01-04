@@ -53,7 +53,7 @@ def accumulate_dates(dates, stars):
     return a_dates, a_stars
 
 def main(p_dir, t_obs, n_beams, d_min):
-    VERBOSE = True
+    VERBOSE = False
     # Set main index based on 32M database:
     observed = np.zeros(34000000)
     # Progress list:
@@ -61,6 +61,8 @@ def main(p_dir, t_obs, n_beams, d_min):
     stars = []
     # Walk through files in directory
     p_files = os.listdir(p_dir)
+    # Sort earliest first:
+    p_files = sorted(p_files)
     # For each file, step through pointings
     for p_file in p_files:
         p_path = os.path.join(p_dir, p_file)
