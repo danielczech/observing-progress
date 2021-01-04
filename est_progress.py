@@ -47,13 +47,13 @@ def accumulate_dates(dates, stars):
     t_range = (stop - start).days
     a_dates = [start + timedelta(days = n) for n in range(t_range + 1)]
     a_stars = [0 for n in range(t_range + 1)]
-    for date in dates:
-        idx = (date - start).days
-        a_stars[idx] = a_stars[idx] + stars[idx]
+    for i in range(len(dates)):
+        idx = (dates[i] - start).days
+        a_stars[idx] = a_stars[idx] + stars[i]
     return a_dates, a_stars
 
 def main(p_dir, t_obs, n_beams, d_min):
-    VERBOSE = False
+    VERBOSE = True
     # Set main index based on 32M database:
     observed = np.zeros(34000000)
     # Progress list:
@@ -74,8 +74,8 @@ def main(p_dir, t_obs, n_beams, d_min):
                 continue
             # Calculate number of beam slots available
             # Note: Partial slots are discarded here (partial being < d_min)
-            p_duration = pointing[1]//d_min*d_min
-            n_slots = n_beams*p_duration//t_obs # t_obs in seconds
+            p_duration = (pointing[1]//d_min)*d_min
+            n_slots = (n_beams*p_duration)//t_obs # t_obs in seconds
             # check which stars still to be observed
             unobserved = np.where(observed[pointing[3]] == 0)[0]
             # mark as observed
