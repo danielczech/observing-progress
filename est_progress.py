@@ -53,7 +53,7 @@ def accumulate_dates(dates, stars):
     return a_dates, a_stars
 
 def main(p_dir, t_obs, n_beams, d_min):
-    VERBOSE = True
+    VERBOSE = False
     # Set main index based on 32M database:
     observed = np.zeros(34000000)
     # Progress list:
@@ -92,7 +92,7 @@ def main(p_dir, t_obs, n_beams, d_min):
     print("Saving...")
     a_dates, a_stars = accumulate_dates(dates, stars)
     progress = [a_dates, a_stars]
-    with open('progress_{}.pkl'.format(n_beams), 'wb') as f:
+    with open('progress_{}_{}.pkl'.format(n_beams, d_min), 'wb') as f:
         pickle.dump(progress, f)
 
 if(__name__=="__main__"):
