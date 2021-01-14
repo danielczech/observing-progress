@@ -49,19 +49,39 @@ def cli(args = sys.argv[0]):
     main(catalogue = args.catalogue, pointings = args.pointings, 
             lstart = args.lstart, n = args.n, d_min = args.d_min)
 
+def fov(band, D):
+    """
+    Estimate field of view from frequency band (str).
+    Expects naming format: 1.5GHz
+    Returns radius of FoV in degrees.
+    """
+    if('M' in band):
+        band = band.split('M')[0]
+        band = float(band)*10**6
+    elif('G' in band):
+        band = band.split('G')[0]
+        band = float(band)*10**9
+    else:
+        print('Unable to read band: {}'.format(band))
+    wavelength = 299792458.0/band
+    field_of_view = 1.02*wavelength/D*180.0/np.pi/2.0
+    return field_of_view
+
 def main(catalogue, pointings, lstart, n, d_min):
 
-    RADIUS = 0.245455 # Estimate in deg: 1.02*0.21/25.0*180/np.pi/2.0
+    #RADIUS = 0.245455 # Estimate in deg: 1.02*0.21/25.0*180/np.pi/2.0
     # Load file of VLITE pointings
     # For now, start with RA, Dec, duration and date.
     pd.options.display.max_colwidth = 2000 # Surprising this is necessary...
     pointings = pd.read_csv(pointings, 
-                            usecols = [0,1,2,3], 
+                            usecols = [0,1,2,3,10], 
                             delimiter = '  ',
                             dtype={'RA_[deg]':float, 
                                 'Dec_[deg]':float, 
                                 'Duration_[s]':float, 
-                                'YYYY-MM-DD':str})
+                                'YYYY-MM-DD':str,
+                                'priband':str
+                                })
     pointings = pointings.to_numpy()
     print("Pointings loaded")
 
@@ -90,7 +110,9 @@ def main(catalogue, pointings, lstart, n, d_min):
             # skip and continue
             continue
         start = time.time()
-        idx_i = gen_star_lists(pointings[i, 0:2], db_full, RADIUS)
+        radius = fov(pointings[i, 4], 25.0) 
+        idx_i = gen_star_lists(pointings[i, 0:2], db_full, radius)
+        print('FoV: {} len: {}'.format(radius, len(idx_i)))
         if(len(idx_i) > 0):
             # field 1: pointing index
             # field 2: duration
@@ -102,7 +124,7 @@ def main(catalogue, pointings, lstart, n, d_min):
             n, len(idx_i), time.time() - start))
     print(pointing_list)
     print("Saving source lists: ")
-    with open('stars_per_pointing_{}.pkl'.format(lstart), 'wb') as f:
+    with open('stars_pp_fov_{}.pkl'.format(lstart), 'wb') as f:
         pickle.dump(pointing_list, f)
 
 if(__name__=="__main__"):
