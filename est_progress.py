@@ -20,16 +20,18 @@ def cli(args = sys.argv[0]):
     help_t_obs = """Desired observation duration for each star"""
     help_n_beams = """Specified number of beams"""
     help_d_min = """Minimum acceptable primary observation duration"""
+    help_cat = """Main catalogue of stars which was drawn from"""
     parser.add_argument('p_dir', type = str, help = help_p_dir)
     parser.add_argument('t_obs', type = int, help = help_t_obs)
     parser.add_argument('n_beams', type = int, help = help_n_beams)
     parser.add_argument('d_min', type = int, help = help_d_min)
+    parser.add_argument('catalogue', type = str, help = help_cat)
     if(len(sys.argv[1:]) == 0): 
         print('Missing args')
         parser.exit()
     args = parser.parse_args()
     main(p_dir = args.p_dir, t_obs = args.t_obs, 
-            n_beams = args.n_beams, d_min = args.d_min)
+            n_beams = args.n_beams, d_min = args.d_min, catalogue = args.catalogue)
 
 def accumulate_dates(dates, stars):
     """Accumulate observed stars on the same dates.
@@ -52,7 +54,7 @@ def accumulate_dates(dates, stars):
         a_stars[idx] = a_stars[idx] + stars[i]
     return a_dates, a_stars
 
-def main(p_dir, t_obs, n_beams, d_min):
+def main(p_dir, t_obs, n_beams, d_min, catalogue):
     VERBOSE = False
     # Set main index based on 32M database:
     observed = np.zeros(34000000)
@@ -92,8 +94,30 @@ def main(p_dir, t_obs, n_beams, d_min):
     print("Saving...")
     a_dates, a_stars = accumulate_dates(dates, stars)
     progress = [a_dates, a_stars]
-    with open('progress_{}_{}.pkl'.format(n_beams, d_min), 'wb') as f:
+    with open('progress_{}_{}_a.pkl'.format(n_beams, d_min), 'wb') as f:
         pickle.dump(progress, f)
+    # Access statistics on observed stars
+    # Load catalogue
+    catalogue = pd.read_csv(catalogue, delimiter = ',',
+            dtype={'source_id':str,
+                'ra':float,
+                'dec':float,
+                'dist_c':float})
+    maindb = catalogue.to_numpy()
+    maindb = maindb[1:, :] # remove column headers
+    # Use lines below if using full unrestricted DB:
+    # maindb_ = np.zeros((maindb.shape[0], 3))
+    # maindb_[:, 1:2] = maindb[:, 3:4]
+    # maindb_[:, 2:3] = maindb[:, 5:6]
+    # Sort by distance:
+    dist_idx = np.argsort(maindb[:, -1])
+    db_full = maindb[dist_idx, :]
+    print("Catalogue loaded")
+    # Stars to consider:
+    star_idx = np.where(observed > 0)[0]
+    distances = maindb[:, 3][star_idx]
+    print(np.min(distances))
+    print(np.max(distances))
 
 if(__name__=="__main__"):
     cli()
